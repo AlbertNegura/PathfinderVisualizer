@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import Node from './Node/Node';
 import {dijkstra, getNodesInShortestPathOrder} from './algorithms/dijkstra';
+import {astar, getNodesInShortestPathOrderAStar} from './algorithms/astar';
 
 import './PathfinderVisualizer.css';
 
@@ -38,7 +39,27 @@ export default class PathfinderVisualizer extends Component {
         this.setState({mouseIsPressed: false});
     }
 
+    resetBoard() {
+        this.setState({grid: getInitialGrid()});
+    }
+
     animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder) {
+        for (let i = 0; i <= visitedNodesInOrder.length; i++) {
+            if (i === visitedNodesInOrder.length) {
+                setTimeout(() => {
+                    this.animateShortestPath(nodesInShortestPathOrder);
+                }, 10 * i);
+                return;
+            }
+            setTimeout(() => {
+                const node = visitedNodesInOrder[i];
+                document.getElementById(`node-${node.row}-${node.col}`).className =
+                    'node node-visited';
+            }, 10 * i);
+        }
+    }
+
+    animateAStar(visitedNodesInOrder, nodesInShortestPathOrder) {
         for (let i = 0; i <= visitedNodesInOrder.length; i++) {
             if (i === visitedNodesInOrder.length) {
                 setTimeout(() => {
@@ -73,14 +94,31 @@ export default class PathfinderVisualizer extends Component {
         this.animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
     }
 
+    visualizeAStar() {
+        const {grid} = this.state;
+        const startNode = grid[START_NODE_ROW][START_NODE_COL];
+        const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+        const visitedNodesInOrder = astar(grid, startNode, finishNode);
+        const nodesInShortestPathOrder = getNodesInShortestPathOrderAStar(finishNode);
+        this.animateAStar(visitedNodesInOrder, nodesInShortestPathOrder);
+    }
+
     render() {
         const {grid, mouseIsPressed} = this.state;
 
         return (
             <>
+                <button onClick={() => this.resetBoard()}>
+                    Reset the board
+                </button>
                 <button onClick={() => this.visualizeDijkstra()}>
                     Visualize Dijkstra's Algorithm
                 </button>
+
+                <button onClick={() => this.visualizeAStar()}>
+                    Visualize the A-Star Algorithm
+                </button>
+
                 <div className="grid">
                     {grid.map((row, rowIdx) => {
                         return (
